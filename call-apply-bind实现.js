@@ -17,10 +17,12 @@ Function.prototype.callMe = function(){
   return result;
 }
 
-Function.prototype.applyMe = function () {
-  var bindThis = arguments[0] || window;
+Function.prototype.applyMe = function (bindThis = window, arr = []) {
   var fn = this;
-  var args = arguments[1]
+  var args = [];
+  for(var i=0;i<arr.length;i++){
+    args.push('arr['+i+']')
+  }
   bindThis.f = fn;
   var result = eval('bindThis.f(' + args + ')')
   delete bindThis.f
