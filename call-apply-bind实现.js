@@ -3,6 +3,7 @@ Function.prototype.callMe = function(){
   var fn = this;
   var args = []
   for(var i=1;i<arguments.length;i++){
+    
     // 这里要push 这行字符串  而不是直接push 值
     // 因为直接push值会导致一些问题
     // 例如: push一个数组 [1,2,3]
