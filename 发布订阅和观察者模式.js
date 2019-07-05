@@ -58,6 +58,61 @@ zufang.emit('smallRoom', '有大房子啦')
 zufang.off('bigRoom', jack)
 console.log(zufang.subscribers)
 
+/* 
+Publisher   发布者 具有发布功能Publish
+Broker      消息列队 也是我们常说的经纪人
+subscriber  订阅者  具有订阅subscribe 和取消订阅 功能 unsubscribe
+ */
+
+function Publisher() {
+  this.broker = {}
+}
+Publisher.prototype.deliver = function (topic, ...arg) {
+  var subList = this.broker[topic] || []
+  subList.forEach(sub => {
+    sub.fire(...arg)
+  })
+}
+
+function Subscriber(callback) {
+  this.fire = callback;
+}
+Subscriber.prototype.subscribe = function (topic, publisher) {
+  var subList = publisher.broker[topic]
+  if (!subList) publisher.broker[topic] = []
+  publisher.broker[topic].push(this)
+  return this;
+}
+Subscriber.prototype.unsubscribe = function (topic, publisher) {
+  var subList = publisher.broker[topic]
+  if (!subList || subList.length === 0) return this;
+  for (var i = 0, item; item = subList[i++];) {
+    if (item === this) {
+      subList.splice(i - 1, 1)
+      break;
+    }
+  }
+  return this;
+}
+
+var publisher1 = new Publisher()
+var subscriber1 = new Subscriber(function (...arg) {
+  console.log(...arg, 'subscriber1')
+})
+var subscriber2 = new Subscriber(function (...arg) {
+  console.log(...arg, 'subscriber2')
+})
+var subscriber3 = new Subscriber(function (...arg) {
+  console.log(...arg, 'subscriber3')
+})
+subscriber1.subscribe('weather', publisher1).subscribe('news', publisher1)
+subscriber2.subscribe('weather', publisher1)
+subscriber3.subscribe('news', publisher1)
+subscriber1.unsubscribe('news', publisher1)
+publisher1.deliver('news', '劲爆新闻')
+subscriber1.unsubscribe('weather', publisher1)
+publisher1.deliver('weather', '打雷了', '下雨了', '收衣服了')
+
 
 //2.观察者模式
 //观察者
