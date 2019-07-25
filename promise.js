@@ -126,21 +126,93 @@ Promise.deferred = Promise.defer = function () {
   })
   return dfd;
 }
-module.exports = Promise
+Promise.resolve = function (value) {
+  var promise2 = new Promise(function (resolve, reject) {
+    resolvePromise(promise2, value, resolve, reject)
+  })
+  return promise2
+}
+Promise.reject = function (reason) {
+  var promise2 = new Promise(function (resolve, reject) {
+    resolvePromise(promise2, reason, resolve, reject)
+  })
+  return promise2
+}
+Promise.all = function (promises) {
+  if (!promises instanceof Array) throw TypeError('参数必须为数组')
+  var count = 0;
+  var arr = []
+  var promise2 = new Promise(function (resolve, reject) {
+    promises.forEach(function (item, index) {
+      resolvePromise2(item, index)
+    })
 
-const fs = require('fs')
+    function resolvePromise2(item, index) {
+      if (item.then && (typeof item === 'object' || typeof item === 'function')) {
+        try {
+          let then = item.then
+          if (typeof then === 'function') {
+            then.call(item, function (value) {
+              resolvePromise2(value, index)
+            }, reject)
+          } else {
+            processData(item, index)
+          }
+        } catch (e) {
+          reject(e)
+        }
+      } else {
+        processData(item, index)
+      }
+    }
 
-var defer = Promise.deferred()
-fs.readFile('./package.json', 'utf8', function (err, data) {
-  if (err) {
-    defer.reject(err)
-  } else {
-    defer.resolve(data)
-  }
-})
-console.log(defer)
-defer.promise.then(res => {
-  console.log(res)
-}, rej => {
-  console.log(rej)
-})
+    function processData(value, index) {
+      arr[index] = value
+      if (++count === promises.length) {
+        resolve(arr)
+      }
+    }
+  })
+  return promise2
+}
+Promise.race = function (promises) {
+    return new Promise(function (resolve, reject) {
+      for (var i = 0; i < promises.length; i++) {
+        promises[i].then(resolve, reject)
+      }
+    })
+  },
+  module.exports = Promise
+
+// const fs = require('fs')
+
+// var defer = Promise.deferred()
+// fs.readFile('./package.json', 'utf8', function (err, data) {
+//   if (err) {
+//     defer.reject(err)
+//   } else {
+//     defer.resolve(data)
+//   }
+// })
+// defer.promise.then(res => {
+//   console.log(res)
+// }, rej => {
+//   console.log(rej)
+// })
+
+
+// var p2 = new Promise(function (resolve, reject) {
+//   setTimeout(() => {
+//     resolve(p1)
+//   }, 500)
+// })
+// var p3 = new Promise(function (resolve, reject) {
+//   setTimeout(() => {
+//     reject(900)
+//   }, 900)
+// })
+// Promise.all([p1, p2, p3]).then(function (res) {
+//   console.log(res, 'res')
+// }, function (reject) {
+//   console.log(reject, 'rej')
+// })
